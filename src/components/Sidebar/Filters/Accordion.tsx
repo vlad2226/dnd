@@ -8,7 +8,7 @@ const { setAccordionFilterOpen, accordionFilterOpen } = useStore()
   return (
     <div>
       <button
-        className="flex text-gray-500 items-center mb-4"
+        className="flex text-gray-500 items-center space-y-2"
         onClick={toggleAccordion}
       >
         <div className="flex flex-row justify-between">

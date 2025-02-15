@@ -15,13 +15,14 @@ export interface Filter {
   name: string;
   type: FileType;
   icon: LucideIcon;
-  fileCount: number;
 }
 
-export interface Folder {
-  id: string;
-  name: string;
-  fileCount: number;
+interface GroupedFilesByType {
+  [key: string]: {
+    id: string;
+    name: string;
+    content: MediaFile[];
+  };
 }
 
 interface SelectedFilters {
@@ -30,11 +31,13 @@ interface SelectedFilters {
 
 interface MediaStore {
   accordionFilterOpen: boolean;
-  folders: Folder[];
   files: MediaFile[];
   selectedFolder: string | null;
+  groupedFilesByType: GroupedFilesByType;
+  filterCount: { image: number; video: number; gif: number };
   // selectedFilters: FileType[];
   selectedFiles: string[];
+  selectedFilesOrder: { [key: string]: number };
   // filterType: FileType | null;
   searchQuery: string;
   setAccordionFilterOpen: (isOpen: boolean) => void;
@@ -43,11 +46,12 @@ interface MediaStore {
   setSelectedFilterType: (filter: SelectedFilters) => void;
   selectedFilterType: SelectedFilters;
   setSearchQuery: (query: string) => void;
-  deleteFiles: (ids: string[]) => void;
+  deleteFile: (id: string) => void;
   renameFile: (id: string, newName: string) => void;
   moveFiles: (fileIds: string[], targetFolderId: string) => void;
 }
 
+// supposedly we'd have these in a real-world application, with data fetched from a database or API'
 const files: MediaFile[] = [
   {
     id: "1",
@@ -72,24 +76,61 @@ const files: MediaFile[] = [
   },
 ];
 
-const folders: Folder[] = [
-  { id: "landscapes", name: "Landscapes", fileCount: 2 },
-  { id: "videos", name: "Videos", fileCount: 1 },
-  { id: "misc", name: "Misc", fileCount: 0 },
-];
+const groupedFilesByType: GroupedFilesByType = {
+  landscapes: {
+    id: "landscapes",
+    name: "Landscapes",
+    content: [...files.filter((file) => file.folderId === "landscapes")],
+  },
+  videos: {
+    id: "videos",
+    name: "Videos",
+    content: [...files.filter((file) => file.folderId === "videos")],
+  },
+  misc: {
+    id: "misc",
+    name: "Misc",
+    content: [...files.filter((file) => file.folderId === "misc")],
+  },
+};
+
+
+const filterCount = files.reduce(
+  (acc, file) => {
+    switch (file.type) {
+      case "video":
+        acc.video += 1;
+        break;
+      case "image":
+        acc.image += 1;
+        break;
+      case "gif":
+        acc.gif += 1;
+        break;
+    }
+    return acc;
+  },
+  {
+    video: 0,
+    image: 0,
+    gif: 0,
+  },
+);
 
 export const useStore = create<MediaStore>((set) => ({
   accordionFilterOpen: true,
-  folders,
   files,
+  groupedFilesByType,
   selectedFolder: null,
   selectedFiles: [],
+  selectedFilesOrder: {},
   selectedFilterType: {
     image: true,
     video: true,
     gif: true,
   },
   searchQuery: "",
+  filterCount,
 
   setSelectedFolder: (id) =>
     set((prevState) => ({
@@ -100,11 +141,32 @@ export const useStore = create<MediaStore>((set) => ({
     set({ accordionFilterOpen: isOpen }),
 
   toggleFileSelection: (id) =>
-    set((state) => ({
-      selectedFiles: state.selectedFiles.includes(id)
-        ? state.selectedFiles.filter((fileId) => fileId !== id)
-        : [...state.selectedFiles, id],
-    })),
+    set((state) => {
+      const isSelected = state.selectedFiles.includes(id);
+      let newSelectedFiles: string[];
+      let newSelectedFilesOrder: { [key: string]: number };
+
+      if (isSelected) {
+        newSelectedFiles = state.selectedFiles.filter((fileId) => fileId !== id);
+        newSelectedFilesOrder = { ...state.selectedFilesOrder };
+        delete newSelectedFilesOrder[id];
+        // Reorder remaining files
+        newSelectedFiles.forEach((fileId, index) => {
+          newSelectedFilesOrder[fileId] = index + 1;
+        });
+      } else {
+        newSelectedFiles = [...state.selectedFiles, id];
+        newSelectedFilesOrder = {
+          ...state.selectedFilesOrder,
+          [id]: newSelectedFiles.length,
+        };
+      }
+
+      return {
+        selectedFiles: newSelectedFiles,
+        selectedFilesOrder: newSelectedFilesOrder,
+      };
+    }),
 
   setSelectedFilterType: (type) =>
     set((prevState) => ({
@@ -116,10 +178,10 @@ export const useStore = create<MediaStore>((set) => ({
 
   setSearchQuery: (query) => set({ searchQuery: query }),
 
-  deleteFiles: (ids) =>
+  deleteFile: (id) =>
     set((state) => ({
-      files: state.files.filter((file) => !ids.includes(file.id)),
-      selectedFiles: state.selectedFiles.filter((id) => !ids.includes(id)),
+      files: state.files.filter((file) => !id.includes(file.id)),
+      selectedFiles: state.selectedFiles.filter((selectedFilesId) => !id.includes(selectedFilesId)),
     })),
 
   renameFile: (id, newName) =>
@@ -131,12 +193,29 @@ export const useStore = create<MediaStore>((set) => ({
 
   moveFiles: (fileIds: string[], targetFolderId: string) =>
     set((state) => {
-      console.log({fileIds, targetFolderId})
-      return ({
-      files: state.files.map((file) =>
-        fileIds.includes(file.id)
-          ? { ...file, folderId: targetFolderId }
-          : file,
-      ),
-    })}),
+      const updatedFiles = state.files.map((file) => {
+        if (fileIds.includes(file.id)) {
+          return { ...file, folderId: targetFolderId };
+        }
+        return file;
+      });
+
+      const updatedGroupedFilesByType = { ...state.groupedFilesByType };
+
+      // Remove files from their original folders
+      Object.keys(updatedGroupedFilesByType).forEach((folderId) => {
+        updatedGroupedFilesByType[folderId].content = updatedGroupedFilesByType[folderId].content.filter(
+          (file) => !fileIds.includes(file.id)
+        );
+      });
+
+      // Add files to the target folder
+      const movedFiles = updatedFiles.filter((file) => fileIds.includes(file.id));
+      updatedGroupedFilesByType[targetFolderId].content.push(...movedFiles);
+
+      return {
+        files: updatedFiles,
+        groupedFilesByType: updatedGroupedFilesByType,
+      };
+    }),
 }));
