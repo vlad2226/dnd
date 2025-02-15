@@ -5,8 +5,7 @@ import { ImagePlay, Play, Image } from "lucide-react";
 import Accordion from "./Filters/Accordion.tsx";
 import type { ChangeEvent } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import FolderButton from './FolderButton.tsx';
-// ... other imports
+import FolderButton from "./FolderButton.tsx";
 
 const selectAllFilter = {
   name: "Select All",
@@ -16,9 +15,9 @@ const selectAllFilter = {
 };
 
 const filters: Filter[] = [
-  { name: "Images", type: "image", icon: Image, fileCount: 2 },
-  { name: "Videos", type: "video", icon: Play, fileCount: 1 },
-  { name: "GIFs", type: "gif", icon: ImagePlay, fileCount: 0 },
+  { name: "Images", type: "image", icon: Image },
+  { name: "Videos", type: "video", icon: Play },
+  { name: "GIFs", type: "gif", icon: ImagePlay },
 ];
 
 interface SidebarProps {
@@ -26,14 +25,11 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ overFolderId }: SidebarProps) => {
-  const { setSelectedFilterType, accordionFilterOpen, folders } = useStore();
+  const { setSelectedFilterType, accordionFilterOpen, groupedFilesByType } =
+    useStore();
   const { setNodeRef } = useDroppable({
     id: "sidebar",
   });
-
-
-  const store = useStore()
-  console.log(store, 'store')
 
   const selectAllFilters = (event: ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
@@ -55,36 +51,39 @@ const Sidebar = ({ overFolderId }: SidebarProps) => {
 
   return (
     <div ref={setNodeRef} className="w-64 bg-gray-50 border-r h-full p-4">
-      {/* ... other JSX */}
       <div className="space-y-2">
-        {folders.map((folder) => (
-          <FolderButton 
-            key={folder.id} 
-            folder={folder} 
-            isOver={overFolderId === folder.id}
+        {Object.keys(groupedFilesByType).map((folderName) => (
+          <FolderButton
+            key={folderName}
+            folderName={folderName}
+            isOver={overFolderId === groupedFilesByType[folderName].id}
           />
         ))}
-        {/* ... rest of the JSX */}
       </div>
-          <div className="flex flex-row justify-between">
-            <Accordion />
-            <Checkbox
-              filter={selectAllFilter as unknown as Filter}
-              selectFilter={selectAllFilters}
-            />
-          </div>
-          {accordionFilterOpen &&
-            filters.map((filter) => (
-              <div
-                className="flex flex-row justify-between items-center"
-                key={filter.type}
-              >
-                <FilterOption filter={filter} />
-                <Checkbox filter={filter} selectFilter={selectFilterType} />
-              </div>
-            ))}
+
+      <div className="mt-4 space-y-2">
+        <div className="flex flex-row justify-between">
+          <Accordion />
+          <Checkbox
+            filter={selectAllFilter as unknown as Filter}
+            selectFilter={selectAllFilters}
+          />
         </div>
+
+        {accordionFilterOpen &&
+          filters.map((filter) => (
+            <div
+              className="flex flex-row justify-between items-center"
+              key={filter.type}
+            >
+              <FilterOption filter={filter} />
+              <Checkbox filter={filter} selectFilter={selectFilterType} />
+            </div>
+          ))}
+      </div>
+
+    </div>
   );
-}
+};
 
 export default Sidebar;

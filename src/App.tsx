@@ -10,15 +10,15 @@ import {
   DragOverEvent,
 } from "@dnd-kit/core";
 
-import { Toolbar } from "./components/Toolbar";
 import { MediaGrid } from "./components/MediaGrid";
 import Sidebar from "./components/Sidebar/Sidebar";
 import { useStore } from "./store/useStore";
 import { useRef, useState } from "react";
 import { DragOverlayContent } from "./components/Dnd/DragOverlayContent";
+import Toolbar from './components/Toolbar.tsx';
 
 const App = () => {
-  const { moveFiles, files } = useStore();
+  const { moveFiles, files, selectedFiles } = useStore();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overFolderId, setOverFolderId] = useState<string | null>(null);
   const tracked = useRef({
@@ -46,9 +46,16 @@ const App = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && over.id.toString().startsWith("folder-")) {
-      const fileId = active.id as string;
       const folderId = (over.data.current as { folderId: string }).folderId;
-      moveFiles([fileId], folderId);
+      
+      // If there are selected files, move all of them
+      if (selectedFiles.length > 0) {
+        moveFiles(selectedFiles, folderId);
+      } else {
+        // If no files are selected, move only the dragged file
+        const fileId = active.id as string;
+        moveFiles([fileId], folderId);
+      }
     }
     setActiveId(null);
     setOverFolderId(null);

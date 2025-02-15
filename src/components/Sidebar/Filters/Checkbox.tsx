@@ -14,7 +14,6 @@ const Checkbox = ({ filter, selectFilter }: FilterProps) => {
     }
 
     return selectedFilterType[filter.type]};
-  console.log({[filter.type]: isChecked})
 
   return (
     <label className="flex items-center space-x-2 cursor-pointer">

@@ -1,15 +1,15 @@
 import { Folder as FolderIcon } from "lucide-react";
-import { Folder, useStore } from "../../store/useStore.ts";
+import { useStore } from "../../store/useStore.ts";
 import { useDroppable } from "@dnd-kit/core";
 
 interface FolderButtonProps {
-  folder: Folder;
+  folderName: string;
   isOver: boolean;
 }
 
-const FolderButton = ({ folder, isOver }: FolderButtonProps) => {
-  const { setSelectedFolder, selectedFolder } = useStore();
-  const { id, fileCount, name } = folder;
+const FolderButton = ({ folderName, isOver }: FolderButtonProps) => {
+  const { setSelectedFolder, selectedFolder, groupedFilesByType } = useStore();
+  const { id, content, name } = groupedFilesByType[folderName];
   const { setNodeRef } = useDroppable({
     id: `folder-${id}`,
     data: { folderId: id },
@@ -26,14 +26,14 @@ const FolderButton = ({ folder, isOver }: FolderButtonProps) => {
         selectedFolder === id
           ? "bg-blue-100 text-blue-700"
           : isOver
-          ? "bg-gray-200"
-          : "hover:bg-gray-100"
+            ? "bg-gray-200"
+            : "hover:bg-gray-100"
       }`}
     >
       <div className="flex gap-2 items-center">
         <FolderIcon className="w-4 h-4" />
         <span>{name}</span>
-        <span className="text-gray-500">{fileCount}</span>
+        <span className="text-gray-500">{content.length}</span>
       </div>
     </button>
   );

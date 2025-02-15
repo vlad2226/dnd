@@ -4,6 +4,7 @@ import Draggable from "./Dnd/Draggable.tsx";
 
 export const MediaGrid = () => {
   const { files, selectedFolder, selectedFilterType, searchQuery } = useStore();
+
   const filteredFiles = files.filter((file) => {
     if (selectedFolder && file.folderId !== selectedFolder) return false;
     if (selectedFilterType && !selectedFilterType[file.type]) return false;
