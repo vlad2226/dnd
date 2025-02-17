@@ -5,8 +5,8 @@
   "type": "module",
   "homepage": "https://vlad2226.github.io/dnd/",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "npm run dev",
+    "build": "npm run build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
