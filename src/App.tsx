@@ -82,7 +82,6 @@ const App = () => {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragMove={({ delta }) => {
-        // Track drag velocity
         const timestamp = Date.now();
         const timeDelta = timestamp - tracked.current.timestamp;
         const distance = tracked.current.distance - delta.y;

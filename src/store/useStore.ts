@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { LucideIcon } from "lucide-react";
+import {groupBy} from '../lib/utils.ts';
 
 export type FileType = "image" | "video" | "gif";
 
@@ -9,6 +10,7 @@ export interface MediaFile {
   type: FileType;
   url: string;
   folderId: string;
+  aspectRatio: number;
 }
 
 export interface Filter {
@@ -17,48 +19,45 @@ export interface Filter {
   icon: LucideIcon;
 }
 
-interface GroupedFilesByType {
-  [key: string]: {
-    id: string;
-    name: string;
-    content: MediaFile[];
-  };
+interface Folder {
+  id: string;
+  name: string;
 }
 
-interface SelectedFilters {
-  [filterType: string]: boolean;
+interface Filters {
+  image: boolean;
+  video: boolean;
+  gif: boolean;
 }
 
 interface MediaStore {
   accordionFilterOpen: boolean;
   files: MediaFile[];
+  folders: Record<string, Folder>;
+  selectedFilters: Filters;
   selectedFolder: string | null;
-  groupedFilesByType: GroupedFilesByType;
-  filterCount: { image: number; video: number; gif: number };
-  // selectedFilters: FileType[];
+  groupedFiles: Record<string, MediaFile[]>;
   selectedFiles: string[];
-  selectedFilesOrder: { [key: string]: number };
-  // filterType: FileType | null;
+  selectedFilesOrder: Record<string, number>;
   searchQuery: string;
   setAccordionFilterOpen: (isOpen: boolean) => void;
   setSelectedFolder: (id: string | null) => void;
   toggleFileSelection: (id: string) => void;
-  setSelectedFilterType: (filter: SelectedFilters) => void;
-  selectedFilterType: SelectedFilters;
+  setFilter: (filterType: FileType, value: boolean) => void;
   setSearchQuery: (query: string) => void;
   deleteFile: (id: string) => void;
   renameFile: (id: string, newName: string) => void;
   moveFiles: (fileIds: string[], targetFolderId: string) => void;
 }
 
-// supposedly we'd have these in a real-world application, with data fetched from a database or API'
-const files: MediaFile[] = [
+const initialFiles: MediaFile[] = [
   {
     id: "1",
     name: "Mountain Landscape",
     type: "image",
     url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
     folderId: "landscapes",
+    aspectRatio: 16 / 9,
   },
   {
     id: "2",
@@ -66,71 +65,106 @@ const files: MediaFile[] = [
     type: "image",
     url: "https://images.unsplash.com/photo-1514565131-fce0801e5785",
     folderId: "landscapes",
+    aspectRatio: 16 / 9,
   },
   {
     id: "3",
     name: "Nature Video",
     type: "video",
-    url: "https://example.com/video.mp4",
+    url: "https://example.com/nature-video.mp4",
     folderId: "videos",
+    aspectRatio: 16 / 9,
+  },
+  {
+    id: "4",
+    name: "Portrait Shot",
+    type: "image",
+    url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2",
+    folderId: "portraits",
+    aspectRatio: 3 / 4,
+  },
+  {
+    id: "5",
+    name: "Square Food Image",
+    type: "image",
+    url: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445",
+    folderId: "food",
+    aspectRatio: 1,
+  },
+  {
+    id: "6",
+    name: "Panoramic Cityscape",
+    type: "image",
+    url: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df",
+    folderId: "landscapes",
+    aspectRatio: 16 / 9,
+  },
+  {
+    id: "7",
+    name: "Funny Cat GIF",
+    type: "gif",
+    url: "https://example.com/funny-cat.gif",
+    folderId: "misc",
+    aspectRatio: 16 / 9,
+  },
+  {
+    id: "8",
+    name: "Product Video",
+    type: "video",
+    url: "https://example.com/product-video.mp4",
+    folderId: "videos",
+    aspectRatio: 16 / 9,
+  },
+  {
+    id: "9",
+    name: "Abstract Art",
+    type: "image",
+    url: "https://images.unsplash.com/photo-1541701494587-cb58502866ab",
+    folderId: "misc",
+    aspectRatio: 16 / 9,
+  },
+  {
+    id: "10",
+    name: "Tall Building",
+    type: "image",
+    url: "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722",
+    folderId: "landscapes",
+    aspectRatio: 16 / 9,
   },
 ];
 
-const groupedFilesByType: GroupedFilesByType = {
+const initialFolders: Record<string, Folder> = {
   landscapes: {
     id: "landscapes",
     name: "Landscapes",
-    content: [...files.filter((file) => file.folderId === "landscapes")],
   },
   videos: {
     id: "videos",
     name: "Videos",
-    content: [...files.filter((file) => file.folderId === "videos")],
   },
   misc: {
     id: "misc",
     name: "Misc",
-    content: [...files.filter((file) => file.folderId === "misc")],
   },
 };
 
+const groupedFiles = groupBy(initialFiles, (file) => file.type)
 
-const filterCount = files.reduce(
-  (acc, file) => {
-    switch (file.type) {
-      case "video":
-        acc.video += 1;
-        break;
-      case "image":
-        acc.image += 1;
-        break;
-      case "gif":
-        acc.gif += 1;
-        break;
-    }
-    return acc;
-  },
-  {
-    video: 0,
-    image: 0,
-    gif: 0,
-  },
-);
 
 export const useStore = create<MediaStore>((set) => ({
   accordionFilterOpen: true,
-  files,
-  groupedFilesByType,
-  selectedFolder: null,
-  selectedFiles: [],
-  selectedFilesOrder: {},
-  selectedFilterType: {
+  files: initialFiles,
+  groupedFiles: groupedFiles,
+  folders: initialFolders,
+  selectedFilters: {
     image: true,
     video: true,
     gif: true,
   },
+  selectedFolder: null,
+  selectedFiles: [],
+  selectedFilesOrder: {},
   searchQuery: "",
-  filterCount,
 
   setSelectedFolder: (id) =>
     set((prevState) => ({
@@ -140,39 +174,29 @@ export const useStore = create<MediaStore>((set) => ({
   setAccordionFilterOpen: (isOpen: boolean) =>
     set({ accordionFilterOpen: isOpen }),
 
-  toggleFileSelection: (id) =>
-    set((state) => {
-      const isSelected = state.selectedFiles.includes(id);
-      let newSelectedFiles: string[];
-      let newSelectedFilesOrder: { [key: string]: number };
+    toggleFileSelection: (id) =>
+        set((state) => {
+            const isSelected = state.selectedFiles.includes(id);
+            const newSelectedFiles = isSelected
+                ? state.selectedFiles.filter((fileId) => fileId !== id)
+                : [...state.selectedFiles, id];
 
-      if (isSelected) {
-        newSelectedFiles = state.selectedFiles.filter((fileId) => fileId !== id);
-        newSelectedFilesOrder = { ...state.selectedFilesOrder };
-        delete newSelectedFilesOrder[id];
-        // Reorder remaining files
-        newSelectedFiles.forEach((fileId, index) => {
-          newSelectedFilesOrder[fileId] = index + 1;
-        });
-      } else {
-        newSelectedFiles = [...state.selectedFiles, id];
-        newSelectedFilesOrder = {
-          ...state.selectedFilesOrder,
-          [id]: newSelectedFiles.length,
-        };
-      }
+            const newSelectedFilesOrder = newSelectedFiles.reduce((acc, fileId, index) => {
+                acc[fileId] = index + 1;
+                return acc;
+            }, {} as Record<string, number>);
 
-      return {
-        selectedFiles: newSelectedFiles,
-        selectedFilesOrder: newSelectedFilesOrder,
-      };
-    }),
+            return {
+                selectedFiles: newSelectedFiles,
+                selectedFilesOrder: newSelectedFilesOrder,
+            };
+        }),
 
-  setSelectedFilterType: (type) =>
-    set((prevState) => ({
-      selectedFilterType: {
-        ...prevState.selectedFilterType,
-        ...type,
+  setFilter: (filterType, value) =>
+    set((state) => ({
+      selectedFilters: {
+        ...state.selectedFilters,
+        [filterType]: value,
       },
     })),
 
@@ -180,42 +204,24 @@ export const useStore = create<MediaStore>((set) => ({
 
   deleteFile: (id) =>
     set((state) => ({
-      files: state.files.filter((file) => !id.includes(file.id)),
-      selectedFiles: state.selectedFiles.filter((selectedFilesId) => !id.includes(selectedFilesId)),
+      files: state.files.filter((file) => file.id !== id),
+      selectedFiles: state.selectedFiles.filter((selectedFileId) => selectedFileId !== id),
     })),
 
   renameFile: (id, newName) =>
     set((state) => ({
       files: state.files.map((file) =>
-        file.id === id ? { ...file, name: newName } : file,
+        file.id === id ? { ...file, name: newName } : file
       ),
     })),
 
   moveFiles: (fileIds: string[], targetFolderId: string) =>
     set((state) => {
-      const updatedFiles = state.files.map((file) => {
-        if (fileIds.includes(file.id)) {
-          return { ...file, folderId: targetFolderId };
-        }
-        return file;
-      });
-
-      const updatedGroupedFilesByType = { ...state.groupedFilesByType };
-
-      // Remove files from their original folders
-      Object.keys(updatedGroupedFilesByType).forEach((folderId) => {
-        updatedGroupedFilesByType[folderId].content = updatedGroupedFilesByType[folderId].content.filter(
-          (file) => !fileIds.includes(file.id)
-        );
-      });
-
-      // Add files to the target folder
-      const movedFiles = updatedFiles.filter((file) => fileIds.includes(file.id));
-      updatedGroupedFilesByType[targetFolderId].content.push(...movedFiles);
-
+      const updatedFiles = state.files.map((file) =>
+        fileIds.includes(file.id) ? { ...file, folderId: targetFolderId } : file
+      );
       return {
         files: updatedFiles,
-        groupedFilesByType: updatedGroupedFilesByType,
       };
     }),
 }));

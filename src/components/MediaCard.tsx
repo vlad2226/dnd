@@ -2,16 +2,37 @@ import { Play, Image as ImageIcon, Film, Trash2, Edit2 } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 import { MediaFile, useStore } from "../store/useStore";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { type MouseEvent, useState } from "react";
 
 interface MediaCardProps {
   file?: MediaFile;
   isDragging?: boolean;
 }
-
+const fileIcons = {
+  video: (
+    <>
+      <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+        <Film className="w-12 h-12 text-gray-400" />
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100">
+        <Play className="w-12 h-12 text-white" />
+      </div>
+    </>
+  ),
+  gif: (
+    <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+      <ImageIcon className="w-12 h-12 text-gray-400" />
+    </div>
+  ),
+};
 const MediaCard = ({ file, isDragging }: MediaCardProps) => {
-  const { selectedFiles, selectedFilesOrder, toggleFileSelection, deleteFile, renameFile } =
-      useStore();
+  const {
+    selectedFiles,
+    selectedFilesOrder,
+    toggleFileSelection,
+    deleteFile,
+    renameFile,
+  } = useStore();
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: file?.id || 0,
@@ -24,7 +45,7 @@ const MediaCard = ({ file, isDragging }: MediaCardProps) => {
     return null;
   }
 
-  const { id, name, type, url } = file;
+  const { id, name, type, url, aspectRatio } = file;
   const isSelected = selectedFiles.includes(id);
   const selectionOrder = selectedFilesOrder[id];
   const style = {
@@ -33,12 +54,16 @@ const MediaCard = ({ file, isDragging }: MediaCardProps) => {
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const stopPropagation = (e: MouseEvent) => {
+    e.stopPropagation()
+  };
+
+  const handleDelete = (e: MouseEvent) => {
     e.stopPropagation();
     deleteFile(id);
   };
 
-  const startEditing = (e: React.MouseEvent) => {
+  const startEditing = (e: MouseEvent) => {
     e.stopPropagation();
     setIsEditing(true);
     setNewName(name);
@@ -58,23 +83,10 @@ const MediaCard = ({ file, isDragging }: MediaCardProps) => {
           <img src={url} alt={name} className="w-full h-48 object-cover" />
         );
       case "video":
-        return (
-          <>
-            <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-              <Film className="w-12 h-12 text-gray-400" />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <Play className="w-12 h-12 text-white" />
-            </div>
-          </>
-        );
+        return fileIcons.video;
       case "gif":
       default:
-        return (
-          <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-            <ImageIcon className="w-12 h-12 text-gray-400" />
-          </div>
-        );
+        return fileIcons.gif;
     }
   };
 
@@ -95,7 +107,7 @@ const MediaCard = ({ file, isDragging }: MediaCardProps) => {
           }
         }}
       >
-        {renderContent()}
+          {renderContent()}
         {isSelected && (
           <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
             {selectionOrder}
@@ -125,7 +137,7 @@ const MediaCard = ({ file, isDragging }: MediaCardProps) => {
             onChange={(e) => setNewName(e.target.value)}
             onBlur={handleRename}
             className="w-full px-2 py-1 text-sm bg-white border border-gray-300 rounded text-black"
-            onClick={(e) => e.stopPropagation()}
+            onClick={stopPropagation}
           />
         ) : (
           <p className="text-sm truncate">{name}</p>
