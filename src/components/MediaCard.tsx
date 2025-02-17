@@ -11,7 +11,7 @@ interface MediaCardProps {
 const fileIcons = {
   video: (
     <>
-      <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
         <Film className="w-12 h-12 text-gray-400" />
       </div>
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -20,9 +20,9 @@ const fileIcons = {
     </>
   ),
   gif: (
-    <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-      <ImageIcon className="w-12 h-12 text-gray-400" />
-    </div>
+      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+        <ImageIcon className="w-12 h-12 text-gray-400" />
+      </div>
   ),
 };
 const MediaCard = ({ file, isDragging }: MediaCardProps) => {
@@ -54,8 +54,19 @@ const MediaCard = ({ file, isDragging }: MediaCardProps) => {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const calculatedAspectRatio = {
+    paddingBottom: `${(1 / aspectRatio) * 100}%`,
+  };
+
+  const toggleFileSelectedState = (e: MouseEvent) => {
+    e.preventDefault();
+    if (!isEditing) {
+      toggleFileSelection(id);
+    }
+  };
+
   const stopPropagation = (e: MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation();
   };
 
   const handleDelete = (e: MouseEvent) => {
@@ -80,13 +91,30 @@ const MediaCard = ({ file, isDragging }: MediaCardProps) => {
     switch (type) {
       case "image":
         return (
-          <img src={url} alt={name} className="w-full h-48 object-cover" />
+          <div className="w-full h-0 relative" style={calculatedAspectRatio}>
+            <img
+              src={url}
+              alt={name}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          </div>
         );
       case "video":
-        return fileIcons.video;
+        return (
+          <div
+            className="w-full h-0 relative"
+            style={calculatedAspectRatio}
+          >
+            {fileIcons.video}
+          </div>
+        );
       case "gif":
       default:
-        return fileIcons.gif;
+        return (
+            <div className="w-full h-0 relative" style={calculatedAspectRatio}>
+              {fileIcons.gif}
+            </div>
+        );
     }
   };
 
@@ -100,14 +128,9 @@ const MediaCard = ({ file, isDragging }: MediaCardProps) => {
         className={`relative group cursor-pointer rounded-lg overflow-hidden ${
           isSelected ? "ring-2 ring-blue-500" : ""
         } ${isDragging ? "shadow-2xl" : ""}`}
-        onClick={(e) => {
-          e.preventDefault();
-          if (!isEditing) {
-            toggleFileSelection(id);
-          }
-        }}
+        onClick={toggleFileSelectedState}
       >
-          {renderContent()}
+        {renderContent()}
         {isSelected && (
           <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
             {selectionOrder}
@@ -136,7 +159,7 @@ const MediaCard = ({ file, isDragging }: MediaCardProps) => {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onBlur={handleRename}
-            className="w-full px-2 py-1 text-sm bg-white border border-gray-300 rounded text-black"
+            className="w-full px-2 py-1 text-sm bg-white border border-gray-300 rounded-sm text-black"
             onClick={stopPropagation}
           />
         ) : (

@@ -81,7 +81,7 @@ const initialFiles: MediaFile[] = [
     type: "image",
     url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2",
     folderId: "portraits",
-    aspectRatio: 3 / 4,
+    aspectRatio: 4 / 3,
   },
   {
     id: "5",
@@ -107,30 +107,7 @@ const initialFiles: MediaFile[] = [
     folderId: "misc",
     aspectRatio: 16 / 9,
   },
-  {
-    id: "8",
-    name: "Product Video",
-    type: "video",
-    url: "https://example.com/product-video.mp4",
-    folderId: "videos",
-    aspectRatio: 16 / 9,
-  },
-  {
-    id: "9",
-    name: "Abstract Art",
-    type: "image",
-    url: "https://images.unsplash.com/photo-1541701494587-cb58502866ab",
-    folderId: "misc",
-    aspectRatio: 16 / 9,
-  },
-  {
-    id: "10",
-    name: "Tall Building",
-    type: "image",
-    url: "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722",
-    folderId: "landscapes",
-    aspectRatio: 16 / 9,
-  },
+
 ];
 
 const initialFolders: Record<string, Folder> = {
