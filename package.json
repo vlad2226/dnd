@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://vlad2226.github.io/dnd/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
