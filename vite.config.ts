@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/dnd-git-main-vlad2226s-projects',
+  base: 'https://dnd-eight-self.vercel.app/',
   server: {
     port: 3090
   },
