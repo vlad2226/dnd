@@ -1,6 +1,6 @@
 ## Local or public access
 
-Locally, install the dependencies with first, the project can be run with **npm/yarn run dev** or can be accessed at https://vlad2226.github.io/dnd/
+Locally, install the dependencies first, the project can be run with **npm/yarn run dev** or can be accessed at https://vlad2226.github.io/dnd/
 
 # Media Management Application
 
