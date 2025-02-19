@@ -13,11 +13,11 @@ const Draggable = ({ file, children }: Props) => {
     id: file.id,
   });
 
-
   return (
     <div ref={setNodeRef} {...listeners} {...attributes}>
           {children}
     </div>
+
   );
 };
 

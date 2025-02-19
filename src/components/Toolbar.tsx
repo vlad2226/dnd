@@ -1,20 +1,18 @@
 import { Search, CheckSquare, Square } from "lucide-react";
 import { useStore } from "../store/useStore";
-import { ChangeEvent } from "react";
-import { groupBy } from "../lib/utils.ts";
+import { ChangeEvent, useMemo } from "react";
 
 const Toolbar = () => {
   const {
     setSearchQuery,
     selectedFiles,
     selectedFolder,
+    selectedFilters,
     setSelectedFolder,
     files,
     toggleFileSelection,
     folders,
   } = useStore();
-
-  const groupedFilesByFolder = groupBy(files, (file) => file.folderId);
 
   const selectFolder = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedFolder(e.target.value);
@@ -24,11 +22,27 @@ const Toolbar = () => {
     setSearchQuery(e.target.value);
   };
 
+  const filteredFiles = useMemo(() => {
+    return files.filter((file) => {
+      const folderMatch = !selectedFolder || file.folderId === selectedFolder;
+      const typeMatch = selectedFilters[file.type];
+      return folderMatch && typeMatch;
+    });
+  }, [files, selectedFolder, selectedFilters]);
+
   const toggleSelectAll = () => {
-    if (selectedFiles.length === files.length) {
-      files.forEach((file) => toggleFileSelection(file.id));
+    const allSelected = filteredFiles.every(file => selectedFiles.includes(file.id));
+    
+    if (allSelected) {
+      // Deselect all filtered files
+      filteredFiles.forEach(file => {
+        if (selectedFiles.includes(file.id)) {
+          toggleFileSelection(file.id);
+        }
+      });
     } else {
-      files.forEach((file) => {
+      // Select all filtered files
+      filteredFiles.forEach(file => {
         if (!selectedFiles.includes(file.id)) {
           toggleFileSelection(file.id);
         }
@@ -39,14 +53,14 @@ const Toolbar = () => {
   return (
     <div className="border-b p-4 flex items-center justify-between w-full">
       <div className="flex flex-row space-x-4">
-        <div onClick={toggleSelectAll} className="flex items-center space-x-2">
-          {selectedFiles.length > 0 ? (
+        <div onClick={toggleSelectAll} className="flex items-center space-x-2 cursor-pointer">
+          {filteredFiles.length > 0 && filteredFiles.every(file => selectedFiles.includes(file.id)) ? (
             <CheckSquare className="w-5 h-5 text-blue-500" />
           ) : (
             <Square className="w-5 h-5 text-gray-400" />
           )}
           <span className="text-sm text-gray-500">
-            {selectedFiles.length} selected
+            {selectedFiles.filter(id => filteredFiles.some(file => file.id === id)).length} / {filteredFiles.length} selected
           </span>
         </div>
 
@@ -59,7 +73,7 @@ const Toolbar = () => {
             <option value="">All Folders</option>
             {Object.values(folders).map((folder) => (
               <option key={folder.id} value={folder.id}>
-                {folder.name} {groupedFilesByFolder[folder.id]?.length}
+                {folder.name}
               </option>
             ))}
           </select>

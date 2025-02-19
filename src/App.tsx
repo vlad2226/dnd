@@ -13,7 +13,7 @@ import {
 import { MediaGrid } from "./components/MediaGrid";
 import Sidebar from "./components/Sidebar/Sidebar";
 import { useStore } from "./store/useStore";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { DragOverlayContent } from "./components/Dnd/DragOverlayContent";
 import Toolbar from './components/Toolbar.tsx';
 
@@ -21,11 +21,7 @@ const App = () => {
   const { moveFiles, files, selectedFiles } = useStore();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overFolderId, setOverFolderId] = useState<string | null>(null);
-  const tracked = useRef({
-    distance: 0,
-    timestamp: 0,
-    velocity: 0,
-  });
+
   const activeFile = activeId
     ? files.find((file) => file.id === activeId)
     : null;
@@ -81,18 +77,6 @@ const App = () => {
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
-      onDragMove={({ delta }) => {
-        const timestamp = Date.now();
-        const timeDelta = timestamp - tracked.current.timestamp;
-        const distance = tracked.current.distance - delta.y;
-        const velocity = Math.round((distance / timeDelta) * 1000);
-
-        tracked.current = {
-          distance: delta.y,
-          velocity,
-          timestamp,
-        };
-      }}
     >
       <div className="flex h-screen bg-white">
         <Sidebar overFolderId={overFolderId} />

@@ -30,7 +30,7 @@ const Sidebar = ({ overFolderId }: SidebarProps) => {
     accordionFilterOpen,
     setFilter,
     folders,
-    selectedFilters: selectedFilters,
+    selectedFilters,
     files,
   } = useStore();
 
@@ -82,7 +82,7 @@ const Sidebar = ({ overFolderId }: SidebarProps) => {
           <Checkbox
             filter={selectAllFilter as unknown as Filter}
             selectFilter={selectAllFilters}
-            isChecked={false}
+            isChecked={Object.values(selectedFilters).every((filterChecked) => filterChecked)}
           />
         </div>
 

@@ -80,7 +80,7 @@ const initialFiles: MediaFile[] = [
     name: "Portrait Shot",
     type: "image",
     url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2",
-    folderId: "portraits",
+    folderId: "misc",
     aspectRatio: 4 / 3,
   },
   {
@@ -88,7 +88,7 @@ const initialFiles: MediaFile[] = [
     name: "Square Food Image",
     type: "image",
     url: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445",
-    folderId: "food",
+    folderId: "misc",
     aspectRatio: 1,
   },
   {
@@ -96,7 +96,7 @@ const initialFiles: MediaFile[] = [
     name: "Panoramic Cityscape",
     type: "image",
     url: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df",
-    folderId: "landscapes",
+    folderId: "misc",
     aspectRatio: 16 / 9,
   },
   {
